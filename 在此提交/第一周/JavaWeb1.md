@@ -1,5 +1,7 @@
 # JavaWeb
 
+![image-20210722100531586](C:\Users\QHD\AppData\Roaming\Typora\typora-user-images\image-20210722100531586.png)
+
 ## DAY1
 
 **1.1、XML**
@@ -314,7 +316,7 @@ public class Dom4jTest {
 
 **1.1、Servlet**
 
-* 概念：Servlet是是JavaEE规范之一，规范就是接口
+* 概念：Servlet是JavaEE规范之一，规范就是接口
 * Servlet是JavaWeb三大组件之一，三大组件分别是Servlet程序、Filter过滤器、Listener监听器
 * Servlet是运行在服务器的一个Java小程序，它可以**接受客户端发送过来的请求并响应数据给客户端**
 
@@ -817,5 +819,305 @@ public class HelloServlet2 extends HttpServlet {
 
 
 
-5.4、base标签的作用
+**5.4、Web中的相对路径和绝对路径**
+
+* 相对路径：
+* .  （表示当前目录）..（表示上一级目录） 资源名（表示当前目录/资源名）
+* 绝对路径：
+* http://ip:port/工程名/资源路径
+
+
+
+**5.5、web中斜杠的不同意义**
+
+* 在web中/是绝对路径
+* 斜杠如果被浏览器解析，得到的地址是：http://ip:port/
+* 斜杠被服务器解析 ，得到的是：http://ip:port/工程路径
+
+
+
+**6.1、HttpServletResponse类**
+
+* HttpServletResponse类和HttpServletRequest类一样，每次请求进来，Tomcat服务器都会创建一个Response对象传递给Servlet程序去使用。HttpServletRequest表示所有请求的信息，HttpServletResponse表示所有响应的信息，我们如果需要设置返回给客户端的信息，都可以通过HttpServletResponse对象来进行设置
+
+
+
+**6.2、响应流**
+
+* 字节流：getOutputStream()，常用于下载（传递二进制数据）
+* 字符流：getWriter()，常用于回传字符串（常用）  
+* 两个流同时只能使用一个，否则会报错
+
+
+
+**6.3、往客户端回传数据，以及响应乱码问题**
+
+* ```java
+  protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+         //设置服务器的字符集
+          resp.setCharacterEncoding("UTF-8");
+          //通过响应头，设置浏览器字符集，Content-type为响应头
+          resp.setHeader("Content-type","text/html;charset=UTF-8");
+          PrintWriter writer = resp.getWriter();
+  writer.write("xxx是猪");
+      }
+  ```
+
+* ```java
+   //同时设置服务器和客户端都是使用UTF-8字符集，还设置了响应头，此方法一定要在获取流对象调用之前才有效
+     resp.setContentType("text/html;charset=UTF-8");
+  ```
+
+
+
+**6.4、请求重定向**
+
+* 概念：客户端给服务器发请求，然后服务器告诉客户端新地址并访问（因为之前地址已经被废弃）
+
+* ![image-20210722004551185](C:\Users\QHD\AppData\Roaming\Typora\typora-user-images\image-20210722004551185.png)
+
+* ```java
+     //设置响应状态302表示重定向，已搬迁
+          resp.setStatus(302);
+          //设置响应头，说明新的地址在哪里
+          resp.setHeader("Location","http://localhost:8080/Servlet-02/response2");
+  ```
+
+* 特点：
+
+* 浏览器地址栏会发生变化
+
+* 两次请求
+
+* 不共享Request域中的数据
+
+* 不能访问WEB-INF下的资源
+
+* 可以访问资源以外的资源
+
+* 请求重定向推荐使用代码
+
+* ```java
+   //推荐使用代码,该代码中已设置好302，只需传入地址即可
+          resp.sendRedirect("http://localhost:8080/Servlet-02/response2");
+  ```
+
+
+
+---
+
+## DAY4
+
+**7.1、Cookie和Session（会话）**
+
+* 会话：**一次会话**中包含多次请求和响应
+* 一次会话：浏览器第一次给服务器资源发送请求，会话建立，直到有一方断开为止
+* 功能：在一次会话的范围内的多次请求，共享数据
+* 方式： 客户端会话技术：Cookie，服务器端会话技术：Session
+
+
+
+**7.2、Servlet_3.0注解配置**
+
+* 好处：支持注解配置。可以不需要web.xml
+
+* 步骤：1、创建JavaEE项目，选择Servlet的版本3.0以上，可以 不创建web.xml
+
+* 2、定义一类，实现Servlet接口
+
+* 3、复写方法
+
+* 4、在类上使用@WebServlet注解，进行配置
+
+* ```java
+  @WebServlet("/Demo")
+  //括号中内容为资源路径，即为web.xml中的<url-pattern>，该内容可以设置多个路径，为数组形式
+  ```
+
+  
+
+**7.3、Cookie**
+
+* 概念：客户端会话技术，将数据保存到客户端
+
+* 使用步骤：1、创建Cookie对象，绑定数据：new Cookie（String name,String value）
+
+* 2、发送Cookie对象：resp.addCookie（Cookie cookie）
+
+* 3、获取Cookie，拿到数据：req.getCookies（）  返回的是一个Cookie的数组
+
+* ```java
+  //Cookie1   
+  protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+  //1、创建Cookie对象
+          Cookie c=new Cookie("msg","hello");
+  
+          //2、发送Cookie
+          response.addCookie(c);
+          
+           
+      //Cookie2
+      protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+  //获取Cookie
+          Cookie[] cs=request.getCookies();
+          //获取数据
+          if (cs!=null){
+              for (Cookie c:cs
+                   ) {
+                  String name=c.getName();
+                  String value=c.getValue();
+                  System.out.println(name+":"+value);
+              }
+          }
+  ```
+  
+* 实现原理：基于响应头set-cookie和请求头cookie实现
+* ![image-20210722143736962](C:\Users\QHD\AppData\Roaming\Typora\typora-user-images\image-20210722143736962.png)
+
+**7.4、Cookie的细节**
+
+* 1、一次可不可以发送多少个cookie：可以，并且可创建多个cookie对象，使用response调用多次addCookie方法发送cookie即可
+
+* ```java
+  //1、创建Cookie对象
+          Cookie c1=new Cookie("msg","hello");
+          Cookie c2=new Cookie("name","ZSan");
+  
+          //2、发送Cookie
+          response.addCookie(c1);
+          response.addCookie(c2);
+  
+  ```
+
+* 2、cookie在浏览器中保存多长时间：（1）默认情况下，当浏览器关闭后，cookie数据销毁
+
+* （2）持久化存储：setMaxAge(int seconds)：正数（将cookie数据写到硬盘的文件中，cookie存活时间）/负数（默认值）/0（删除cookie信息）
+
+* ```java
+  //1、创建cookie对象
+          Cookie c1=new Cookie("msg","setMaxAge");
+          //2、设置cookie的存活时间
+          c1.setMaxAge(30);//将cookie给他持久化30s到硬盘，30s后会自动删除cookie文件
+          //如果是负数，则代表默认值，浏览关闭则cookie数据销毁
+          //如果为0则表示，删除cookie数据
+  
+      //3、发送cookie
+          response.addCookie(c1);
+  ```
+
+* 3、cookie能不能保存中文：在Tomcat 8之前cookie中不能直接存储中文数据，在Tomcat 8之后支持中文数据.但是特殊字符还是不支持，建议使用URL编码存储
+
+* ```java
+    Cookie c=new Cookie("msg","你好");
+          response.addCookie(c);
+  ```
+
+* 4、cookie的共享问题：（1）同一个tomcat服务器中，部署了多个web项目，那么在这些web项目中cookie不能共享（setPath()：设置cookie的获取范围，该方法默认情况下会去设置当前对象的虚拟目录）
+
+* 如果要共享则将setPath设置为/，即setPath("/")；
+
+* ```java
+    Cookie c=new Cookie("msg","你好");
+          response.addCookie(c);
+  c.setPath("/");
+  ```
+
+* （2）不同的Tomcat服务器间cookie共享问题
+
+* 调用cookie的setDomain(String path)：如果设置一级域名相同，那么多个服务器之间cookie就可以共享
+
+* ```java
+  setDomain(".baidu.com")//那么tieba.baidu.com和news.baidu.com可以共享
+  ```
+
+
+
+**7.5、Cookie的特点和作用**
+
+* cookie存储数据在客户端浏览器（不安全，容易被篡改）
+* 浏览器对于单个cookie的大小不能超过4KB 以及  对同一个域名下的总cookie数量也有限制（20个）
+* 作用：cookie一般用于存储少量的不太敏感的数据
+* 在不登陆的情况下，完成服务器对客户端的身份识别
+
+
+
+**7.6、案例：记住上一次的访问时间**
+
+* 需求：1、访问一个Serlvte如果是第一次访问则提示：您好，欢迎首次访问
+
+* 2、如果不是第一次访问，则提示：欢迎回来，您上次访问的时间字符串
+
+* 分析：1、可以采用cookie来完成  2、判断服务器中的Servlet是否有一个名为lastTime的cookie：有，则不是第一次访问      没有，则是第一次访问
+
+* 有：1、响应数据：欢迎回来，您上次访问的时间为：2021年7月22日15：33：03    2、写回cooki：lastTime=2021年7月22日15：33：03
+
+* 没有：1、响应数据：您好，欢迎首次访问   2、写回cooki：lastTime=2021年7月22日15：33：03
+
+* ```java
+  @WebServlet("/cookieTest")
+  public class CookieTest extends HttpServlet {
+      protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  //设置响应的消息体数据格式以及编码
+          response.setContentType("text/html;charset=utf-8");
+          //1.获取所有的cookie
+          Cookie[] cookies = request.getCookies();
+          boolean flag = false; //代表没有cookie为lastTime
+          //2.遍历cookie数组
+          if (cookies != null) {
+              for (Cookie cookie : cookies
+              ) {
+                  //3.获取cookie的名称
+                  String name = cookie.getName();
+                  //4.判断名称是否是：lastTime
+                  if ("lastTime".equals(name)) {
+                      //有该cookie，不是第一次访问
+                      flag = true;//有lastTime的cookie
+  
+                      //设置cookie的value
+                      //获取当前时间的字符串，重新设置cookie的值，重新发送
+                      Date date = new Date();
+                      SimpleDateFormat sdf = new SimpleDateFormat("yyyy年mm月dd日HH:mm:ss");
+                      String str_date = sdf.format(date);
+                      str_date = URLEncoder.encode(str_date, "utf-8");//URL编码
+                      cookie.setValue(str_date);
+                      //设置cookie的存活时间
+                      cookie.setMaxAge(60 * 60 * 24 * 30);//一个月
+                      response.addCookie(cookie);
+  
+  
+                      //响应数据
+                      //获取cookie的value，时间
+                      String value = cookie.getValue();
+                      value=URLEncoder.encode(value,"utf-8");
+                      response.getWriter().write("<h1>欢迎回来，您上次访问的时间为" + value + "</h1>");
+                      break;
+                  }
+              }
+          }
+          if (cookies == null || cookies.length == 0 || !flag) {
+              //没有，第一次访问
+              //设置cookie的value
+              //获取当前时间的字符串，重新设置cookie的值，重新发送
+              Date date = new Date();
+              SimpleDateFormat sdf = new SimpleDateFormat("yyyy年mm月dd日HH:mm:ss");
+              String str_date = sdf.format(date);
+              str_date = URLEncoder.encode(str_date, "utf-8");//URL编码
+              Cookie cookie = new Cookie("lastTime", "str_date");
+              cookie.setValue(str_date);
+              //设置cookie的存活时间
+              cookie.setMaxAge(60 * 60 * 24 * 30);//一个月
+              response.addCookie(cookie);
+  
+              response.getWriter().write("<h1>您好！欢迎首次访问</h1>");
+          }
+      }
+  
+      protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+          this.doPost(request, response);
+      }
+  }
+  
+  ```
+
+  
 
